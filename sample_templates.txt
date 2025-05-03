@@ -1,0 +1,858 @@
+### Context File Template (JSON)
+```json
+[
+  {
+    "context_id": "proj-001",
+    "tab_type": "ai",
+    "persona": "Jeff",
+    "title": "Project Joe Assistant",
+    "tags": ["project", "coding", "research"],
+    "main_context": {
+      "role": "AI-powered super assistant",
+      "capabilities": ["research", "code", "automate"],
+      "project": "Build AI-Integrated Browser"
+    },
+    "current_context": "Debugging Playwright script.",
+    "llm_output": {
+      "date": "2025-05-01",
+      "info_type": "analysis",
+      "text": {
+        "info": "Debugging suggestions for Playwright script timeout.",
+        "variables": {
+          "1": {"var_names": ["timeout"], "var_types": ["int"]}
+        },
+        "code": {
+          "1": "Increase timeout to 60000ms in Playwright config."
+        }
+      }
+    },
+    "github_url": "https://github.com/user/repo/context/proj-001.json",
+    "created_at": "2025-05-01T10:00:00Z",
+    "last_updated": "2025-05-01T10:30:00Z"
+  }
+]
+
+
+ux doc template
+
+# UI/UX Parameters
+
+## General Style
+- Theme: Dark mode (default), toggleable
+- Font: Fira Code (editor), Roboto (UI)
+- Accent Color: #4F8EF7 (blue)
+- Icon Set: Material Icons
+
+## Layout
+- Split-screen: Editor (left/right), Webpage (right/left)
+- Fullscreen: Editor or Webpage only
+- Always-visible command line at bottom
+- Tab bar at top, with icons for AI, web, and project tabs
+
+## Interaction
+- Toolbar: Toggle split/fullscreen, open logs, run/test code, edit context
+- Shortcuts:
+  - Ctrl+E: Toggle editor view (split/fullscreen)
+  - Ctrl+T: Open new tab
+  - Ctrl+L: Show logs
+  - Ctrl+R: Run active script
+  - Ctrl+Shift+R: Test active script (sandboxed)
+  - Ctrl+P: Open command palette (future)
+
+## Component Specific
+- **Browser:**
+    - Show URL bar: yes
+    - Navigation controls: back, forward, refresh, home
+    - Right-click context menu: standard + "Inspect Element (AI)", "Automate Task (AI)"
+- **Editor (Monaco):**
+    - Minimap: enabled
+    - Line numbers: enabled
+    - Word wrap: off (default)
+    - Integrated linting/errors: enabled (from security scans/AI)
+- **Terminal (Xterm.js):**
+    - Font size: 14px
+    - Cursor style: block
+    - Scrollback lines: 1000
+    - Copy/paste: standard shortcuts
+
+## Animation & Transitions
+- Smooth tab transitions
+- Fade in/out for modals
+
+## Accessibility
+- Keyboard navigation: full support
+- Screen reader support: partial (initial), target full compliance
+- Font scaling: OS level
+
+
+json version
+{
+  "style": {
+    "theme": "dark",
+    "font": {
+      "editor": "Fira Code",
+      "ui": "Roboto"
+    },
+    "accentColor": "#4F8EF7",
+    "iconSet": "Material Icons"
+  },
+  "layout": {
+    "splitScreen": {
+      "orientation": "vertical",
+      "editorPosition": "left"
+    },
+    "alwaysVisibleCommandLine": true,
+    "tabBarPosition": "top"
+  },
+  "interaction": {
+    "toolbar": {
+      "items": ["toggleSplit", "showLogs", "runScript", "testScript", "editContext"]
+    },
+    "shortcuts": {
+      "toggleEditorView": "Ctrl+E",
+      "openNewTab": "Ctrl+T",
+      "showLogs": "Ctrl+L",
+      "runScript": "Ctrl+R",
+      "testScript": "Ctrl+Shift+R",
+      "openCommandPalette": "Ctrl+P"
+    }
+  },
+  "components": {
+    "browser": {
+      "showUrlBar": true,
+      "navigationControls": ["back", "forward", "refresh", "home"],
+      "contextMenu": {
+        "inspectElementAI": true,
+        "automateTaskAI": true
+      }
+    },
+    "editor": {
+      "minimapEnabled": true,
+      "lineNumbersEnabled": true,
+      "wordWrap": "off",
+      "integratedErrorsEnabled": true
+    },
+    "terminal": {
+      "fontSizePx": 14,
+      "cursorStyle": "block",
+      "scrollbackLines": 1000,
+      "copyPasteShortcutsEnabled": true
+    }
+  },
+  "animation": {
+    "tabTransitions": "smooth",
+    "modalTransitions": "fade"
+  },
+  "accessibility": {
+    "keyboardNavigation": true,
+    "screenReaderSupport": "partial"
+    // Note: Font scaling usually relies on OS
+  }
+}
+
+Alt example:
+{
+  "style": {
+    "theme": "dark",
+    "font": { "editor": "Fira Code", "ui": "Roboto" },
+    "accentColor": "#4F8EF7",
+    "iconSet": "Material Icons"
+  },
+  "layout": {
+    "splitScreen": { "orientation": "vertical", "editorPosition": "left" },
+    "alwaysVisibleCommandLine": true,
+    "tabBarPosition": "top"
+  },
+  "interaction": {
+    "toolbar": { "items": ["toggleSplit", "showLogs", "runScript", "testScript", "editContext"] },
+    "shortcuts": {
+      "toggleEditorView": "Ctrl+E",
+      "openNewTab": "Ctrl+T",
+      "showLogs": "Ctrl+L",
+      "runScript": "Ctrl+R",
+      "testScript": "Ctrl+Shift+R",
+      "openCommandPalette": "Ctrl+P"
+    }
+  }
+}
+
+
+general rules template
+
+# General Rules & Guardrails
+
+## System Access
+- AI is not permitted to directly execute shell commands without user approval (via "Run" button).
+- File system writes to 'critical' tagged files require explicit user confirmation (Level 3 action).
+- AI is restricted to accessing files within the project directory by default.
+- Network access for AI outside of specified APIs (LLMs, web Browse) requires explicit user confirmation.
+
+## Automation
+- Automated script execution requires user approval (Level 2 action).
+- Scripts modifying 'important' tagged files require user approval (Level 2 action).
+- Scripts modifying 'critical' tagged files require explicit user confirmation (Level 3 action).
+- Infinite loops in automation scripts should be detected and terminated (implement timeout).
+
+## AI Interaction
+- AI responses are subject to content filtering for safety (handled by LLM provider or potentially a local filter layer).
+- AI should prioritize using available tools (terminal, editor, browser automation) as instructed, rather than simulating actions.
+- AI must clearly indicate when it is performing an action vs. suggesting one.
+
+## File Sensitivity Tags
+- `critical`: Application code, configuration files, private keys. Requires Level 3 action for modification.
+- `important`: Project data files, detailed logs, user notes. Requires Level 2 action for modification.
+- `non-critical`: Temporary files, cached data, downloaded resources. Allows Level 1 or Level 2 actions.
+
+## Error Handling
+- System errors should be logged and, if critical, trigger the 'Doctor' AI.
+- AI errors should be logged and explained to the user.
+- Script execution errors should be analyzed by AI for suggested fixes.
+
+---
+
+(Add more rules as the system evolves and new safety/permission requirements are identified.)
+
+
+json version
+{
+  "system_rules": {
+    "allow_direct_shell_execution_by_ai": false,
+    "require_user_confirm_for_critical_writes": true,
+    "restrict_fs_access_to_project_dir": true,
+    "require_user_confirm_for_external_network_access": false
+  },
+  "automation_rules": {
+    "require_user_approval_for_script_execution": true,
+    "require_user_approval_for_important_writes": true,
+    "require_user_confirm_for_critical_writes": true,
+    "automation_timeout_seconds": 300,
+    "detect_infinite_loops": true
+  },
+  "ai_interaction_rules": {
+    "content_filtering_enabled": true,
+    "prioritize_tool_use_over_simulation": true,
+    "clarify_action_vs_suggestion": true
+  },
+  "file_sensitivity_rules": {
+    "tags": [
+      {"name": "critical", "description": "Application code, configs, keys.", "min_action_level": "level3"},
+      {"name": "important", "description": "Project data, logs, notes.", "min_action_level": "level2"},
+      {"name": "non-critical", "description": "Temp files, cache.", "min_action_level": "level1"}
+    ],
+    "auto_tagging_patterns": [
+      {"pattern": "/config/*", "tag": "critical"},
+      {"pattern": "/backend/*", "tag": "critical"},
+      {"pattern": "*/.git/*", "tag": "critical"},
+      {"pattern": "/logs/*", "tag": "important"},
+      {"pattern": "*.json", "tag": "important"}
+    ]
+  },
+  "error_handling_rules": {
+    "log_all_errors": true,
+    "trigger_doctor_on_critical_error": true,
+    "explain_ai_errors_to_user": true,
+    "analyze_script_errors_with_ai": true
+  }
+}
+
+Alt example:
+{
+  "system_rules": {
+    "allow_direct_shell_execution_by_ai": false,
+    "require_user_confirm_for_critical_writes": true,
+    "restrict_fs_access_to_project_dir": true,
+    "require_user_confirm_for_external_network_access": false
+  },
+  "automation_rules": {
+    "require_user_approval_for_script_execution": true,
+    "require_user_approval_for_important_writes": true,
+    "require_user_confirm_for_critical_writes": true,
+    "detect_infinite_loops": true
+  },
+  "file_sensitivity_rules": {
+    "tags": [
+      { "name": "critical", "description": "App code, configs", "min_action_level": "level3" },
+      { "name": "important", "description": "Project data, logs", "min_action_level": "level2" },
+      { "name": "non-critical", "description": "Temp files", "min_action_level": "level1" }
+    ]
+  }
+}
+
+
+llm tier template
+model_id,api_type,capabilities,performance_score,notes,last_updated
+llama3,ollama,text-generation,8.5,Good all-rounder,2024-05-01
+phi3:3.8b-mini-instruct,ollama,text-generation,7.0,Lightweight, good for simple tasks,2024-05-01
+llava-phi3,ollama,vision,7.8,Good for image analysis,2024-05-01
+mistral:7b-instruct,ollama,text-generation,8.0,Strong reasoning,2024-05-01
+gemma:2b-instruct,ollama,text-generation,6.8,Very lightweight, basic tasks only,2024-05-01
+qwen:4b-chat,ollama,text-generation,7.5,Good for simple automations,2024-05-01
+
+json version
+[
+
+  {
+    "model_id": "gemini-2.5-flash",
+    "api_type": "gemini",
+    "capabilities": ["text-generation", "vision", "reasoning", "coding"],
+    "performance": { "overall": 9.0, "speed": 8.5, "reliability": 9.0 },
+    "scores": { "instruction_following": 8.5, "reasoning": 9.0, "coding": 8.5, "vision_analysis": 8.8 },
+    "notes": "Fast and versatile, supports images and context files, uses structured JSON responses.",
+    "last_updated": "2025-05-01"
+  },
+  {
+    "model_id": "gemini-2.0",
+    "api_type": "gemini",
+    "capabilities": ["text-generation", "vision", "reasoning", "coding"],
+    "performance": { "overall": 8.8, "speed": 8.0, "reliability": 8.8 },
+    "scores": { "instruction_following": 8.0, "reasoning": 8.5, "coding": 8.0, "vision_analysis": 8.5 },
+    "notes": "Robust for complex tasks, uses structured JSON responses.",
+    "last_updated": "2025-05-01"
+  },
+  {
+    "model_id": "claude-3.5-sonnet",
+    "api_type": "duckduckgo",
+    "capabilities": ["text-generation", "reasoning", "coding"],
+    "performance": { "overall": 8.5, "speed": 8.0, "reliability": 8.5 },
+    "scores": { "instruction_following": 8.5, "reasoning": 8.8, "coding": 8.0 },
+    "notes": "Backup model via DuckDuckGo, no structured JSON.",
+    "last_updated": "2025-05-01"
+  }
+  {
+    "model_id": "llama3",
+    "api_type": "ollama",
+    "capabilities": ["text-generation", "reasoning", "coding"],
+    "performance": {"overall": 8.5, "speed": 7.5, "resource_usage_gb": 12},
+    "scores": {"instruction_following": 8, "reasoning": 8.5, "coding": 7.5, "json_generation": 7},
+    "notes": "Good all-rounder.",
+    "last_updated": "2024-05-01"
+  },
+  {
+    "model_id": "phi3:3.8b-mini-instruct",
+    "api_type": "ollama",
+    "capabilities": ["text-generation"],
+    "performance": {"overall": 7.0, "speed": 8.0, "resource_usage_gb": 4},
+    "scores": {"instruction_following": 7, "reasoning": 6.5, "coding": 6, "json_generation": 6},
+    "notes": "Lightweight, good for simple tasks.",
+    "last_updated": "2024-05-01"
+  },
+  {
+    "model_id": "llava-phi3",
+    "api_type": "ollama",
+    "capabilities": ["vision", "text-generation"],
+    "performance": {"overall": 7.8, "speed": 7.0, "resource_usage_gb": 8},
+     "scores": {"instruction_following": 7, "reasoning": 6.8, "vision_analysis": 7.8},
+    "notes": "Good for image analysis alongside text.",
+    "last_updated": "2024-05-01"
+  }
+  // ... other models
+]
+
+
+
+webpage layout template
+{
+  "url": "[https://example.com/some/page](https://example.com/some/page)",
+  "timestamp": "2024-05-01T10:35:00Z",
+  "elements": [
+    {
+      "id": "login-button-123", // Internal ID
+      "type": "button",
+      "description_llm": "A blue button labeled 'Login' located near the top right.",
+      "selectors": {
+        "css": "#loginBtn",
+        "xpath": "//button[contains(text(), 'Login')]",
+        "playwright": "button:has-text('Login')"
+      },
+      "bounding_box": {"x": 850, "y": 20, "width": 100, "height": 40}, // Coordinates from screenshot
+      "text_content": "Login",
+      "visible": true,
+      "interactive": true,
+      "last_verified": "2024-05-01T10:35:00Z" // When this specific element's data was last confirmed
+    },
+    {
+      "id": "search-input-456",
+      "type": "input",
+      "description_llm": "A search input field with a magnifying glass icon.",
+      "selectors": {
+        "css": "input[name='q']",
+        "xpath": "//input[@placeholder='Search']",
+        "playwright": "input[placeholder='Search']"
+      },
+      "bounding_box": {"x": 100, "y": 25, "width": 300, "height": 30},
+      "text_content": "",
+      "placeholder": "Search",
+      "visible": true,
+      "interactive": true,
+      "last_verified": "2024-05-01T10:35:00Z"
+    }
+    // ... more elements
+  ],
+  "sections": [
+    // Optional: LLM identified logical sections of the page
+    {
+      "id": "header-section",
+      "description_llm": "The top part of the page containing the logo and navigation.",
+      "bounding_box": {"x": 0, "y": 0, "width": 1000, "height": 80},
+      "elements_in_section": ["login-button-123", "search-input-456"]
+    }
+  ],
+   "analysis_metadata": {
+     "llm_model": "llava-phi3",
+     "dom_representation_used": true, // Was DOM text also sent?
+     "screenshot_size": "1000x800"
+   }
+}
+
+Alt example:
+{
+  "url": "https://example.com/some/page",
+  "timestamp": "2025-05-01T10:35:00Z",
+  "elements": [
+    {
+      "id": "login-button-123",
+      "type": "button",
+      "description_llm": {
+        "date": "2025-05-01",
+        "info_type": "analysis",
+        "text": {
+          "info": "Description of login button.",
+          "variables": {
+            "1": {"var_names": ["selector"], "var_types": ["str"]}
+          },
+          "code": {
+            "1": ".loginBtn // CSS selector for blue login button"
+          }
+        }
+      },
+      "selectors": {
+        "css": ".loginBtn",
+        "xpath": "//button[contains(text(), 'Login')]",
+        "playwright": "button:has-text('Login')"
+      },
+      "bounding_box": { "x": 850, "y": 20, "width": 100, "height": 40 },
+      "text_content": "Login",
+      "visible": true,
+      "interactive": true,
+      "last_verified": "2025-05-01T10:35:00Z"
+    }
+  ],
+  "github_url": "https://github.com/user/repo/cache/webpage_layout_reference.json"
+}
+
+
+
+promt template
+You are Jeff, an AI programming assistant integrated into a browser.
+Your task is to write a Python script using Playwright to scrape the product title and price from the following URL: {{url}}.
+
+The user will execute this script. Provide only the code.
+
+**Constraints:**
+- Use Playwright.
+- Output the title and price to standard output in a clear format.
+- Handle potential selectors changes gracefully (e.g., use robust selectors).
+- Include necessary imports.
+
+**Context:**
+- Current date: {{current_date}}
+- Project Goal: {{project_goal}}
+- Relevant Code Snippet (if any):
+```python
+{{relevant_code}}
+
+json 
+{
+   "prompt_id": "scrape_product_playwright",
+   "name": "Playwright Product Scraper",
+   "description": "Generates a Python Playwright script to scrape product title and price.",
+   "target_capabilities": ["coding", "python", "web-scraping"], 
+   "sections": [
+ {"type": "system_instruction",
+  "content": "You are Jeff, an AI programming assistant integrated into a browser. Your task is to write a Python script using Playwright."},
+  {"type": "task",
+    "content": "Write a Python script using Playwright to scrape the product title and price from the following URL: {{url}}. Provide only the code."},
+  { "type": "constraints",
+    "content": [ "Use Playwright library.", "Output the title and price to standard output in a clear, parseable format (e.g., JSON or CSV).", "Handle potential dynamic content or selector changes.", "Include all necessary imports and setup." ] }, 
+ { "type": "context",
+   "content": { "current_date": "{{current_date}}", "project_goal": "{{project_goal}}", "relevant_code": "{{relevant_code | optional}}", "webpage_data": "{{webpage_data | optional}}" // e.g., simplified DOM or cached layout reference } }, 
+  {"type": "output_instruction",
+   "content": "Provide only the Python code block, without any introductory or concluding text."}
+ ], 
+ "variables": [ {"name": "url", "description": "The URL of the product page.", "required": true}, {"name": "current_date", "description": "The current date.", "required": true}, {"name": "relevant_code", "description": "Optional relevant code snippet from the editor.", "required": false}, {"name": "webpage_data", "description": "Optional structured data about the webpage (e.g., simplified DOM or layout cache).", "required": false} 
+]
+}
+
+Alt example:
+{
+  "prompt_id": "scrape_product_playwright",
+  "name": "Playwright Product Scraper",
+  "description": "Generates a Python Playwright script to scrape product title and price.",
+  "target_capabilities": ["coding", "python", "web-scraping"],
+  "sections": [
+    {
+      "type": "system_instruction",
+      "content": "You are Jeff, an AI assistant. Write a Python script using Playwright. Responses must follow the JSON format: {'date': '[date]', 'info_type': 'code', 'text': {'info': '[description]', 'variables': {[id]: {'var_names': [names], 'var_types': [types]}}, 'code': {[line]: '[code]'}}}"
+    },
+    {
+      "type": "task",
+      "content": "Write a script to scrape title and price from ${url}. Provide only the code."
+    },
+    {
+      "type": "constraints",
+      "content": [
+        "Use Playwright.",
+        "Output title and price in JSON to stdout.",
+        "Handle dynamic content.",
+        "Include imports."
+      ]
+    },
+    {
+      "type": "context",
+      "content": {
+        "current_date": "${current_date}",
+        "project_goal": "${project_goal}",
+        "relevant_code": "${relevant_code}",
+        "github_context_url": "${github_context_url}"
+      }
+    },
+    {
+      "type": "output_instruction",
+      "content": "Provide only the JSON response with code block."
+    }
+  ],
+  "variables": [
+    { "name": "url", "description": "Product page URL", "required": true },
+    { "name": "current_date", "description": "Current date", "required": true },
+    { "name": "relevant_code", "description": "Optional code snippet", "required": false },
+    { "name": "github_context_url", "description": "GitHub link to context", "required": false }
+  ]
+}
+
+
+
+doctors notes template
+# Doctor's Notes
+
+## 2024-05-01: Playwright Timeout Error
+- Issue: Playwright failed to navigate due to timeout.
+- Solution: Increased timeout in script config, checked network, verified URL.
+- Outcome: Issue resolved after network fix was identified and implemented by user based on Doctor's suggestion.
+
+## 2024-05-02: Script Execution Permission Error
+- Issue: AI attempted to execute script without user approval mechanism being triggered.
+- Solution: Verified enforcement logic in main process for Level 2 actions. Updated `general_rules` to be explicit.
+- Outcome: Enforcement logic confirmed working; no further unauthorized executions of this type.
+
+(Add new entries as issues arise and are resolved. Focus on root cause, fix applied/suggested, and verification.)
+
+
+json version
+{
+  "entry_id": "doc-note-001",
+  "timestamp": "2024-05-01T10:30:00Z",
+  "error": {
+    "type": "PlaywrightTimeoutError",
+    "severity": "major",
+    "description": "Playwright navigation timed out.",
+    "details": "Navigation to {{url}} failed after 30 seconds." // Link to relevant log ID
+  },
+  "analysis": {
+    "analyzer_persona": "Doctor",
+    "identified_cause": "Network issue or insufficient timeout.",
+    "suggested_solution": "Increase Playwright timeout in script/config. Check network connectivity for {{url}}. Verify URL correctness."
+  },
+  "resolution": {
+    "status": "resolved",
+    "applied_by": "User",
+    "action_taken": "User identified and fixed local network issue based on suggestion.",
+    "resolved_timestamp": "2024-05-01T10:45:00Z"
+  }
+}
+
+Alt example:
+[
+  {
+    "entry_id": "doc-note-001",
+    "timestamp": "2025-05-01T10:30:00Z",
+    "error": {
+      "type": "PlaywrightTimeoutError",
+      "severity": "major",
+      "description": "Playwright navigation timed out.",
+      "details": "Navigation to ${url} failed."
+    },
+    "analysis": {
+      "analyzer_persona": "Doctor",
+      "llm_output": {
+        "date": "2025-05-01",
+        "info_type": "analysis",
+        "text": {
+          "info": "Analysis of Playwright timeout error.",
+          "variables": {
+            "1": {"var_names": ["timeout"], "var_types": ["int"]}
+          },
+          "code": {
+            "1": "Increase timeout to 60000ms // Adjust Playwright config"
+          }
+        }
+      }
+    },
+    "resolution": {
+      "status": "resolved",
+      "applied_by": "User",
+      "action_taken": "Fixed network issue.",
+      "resolved_timestamp": "2025-05-01T10:45:00Z"
+    }
+  }
+]
+
+
+
+feedback report template
+# AI Feedback Report
+
+## Date: 2024-05-01
+
+### Summary
+- Total AI actions initiated: 42
+- Successful actions completed: 38
+- Failed actions: 4
+- Multimodal triggers: 1
+- User approvals granted: 10
+- User confirmations granted (critical): 1
+
+### Notable Issues
+- Playwright navigation timeout (see Doctor's Notes entry doc-note-001)
+- Code suggestion failed tests (2 cases) - need to analyze why tests failed.
+
+### User Feedback
+- Thumbs up: 25
+- Thumbs down: 3 (Link these to specific AI interaction logs if possible)
+- Suggestions: "Improve code comments", "Faster context switching" (Link to relevant AI interactions)
+
+### Recommendations
+- Review LLM tier list for debugging tasks based on code suggestion failures.
+- Consider increasing default timeout for Playwright actions in automation config.
+- Monitor Doctor’s Notes for recurring issues.
+- Investigate user feedback on context switching performance.
+
+---
+
+(Generated automatically based on logs and user input.)
+
+
+
+json version
+{
+  "report_date": "2024-05-01",
+  "summary": {
+    "total_actions_initiated": 42,
+    "successful_actions": 38,
+    "failed_actions": 4,
+    "multimodal_triggers": 1,
+    "user_approvals_granted": 10,
+    "user_confirmations_granted": 1
+  },
+  "issues": [
+    {"type": "PlaywrightTimeoutError", "count": 1, "reference": "doc-note-001"},
+    {"type": "CodeSuggestionFailedTests", "count": 2}
+  ],
+  "user_feedback": {
+    "thumbs_up": 25,
+    "thumbs_down": 3,
+    "suggestions": [
+      {"text": "Improve code comments", "related_log_id": "log-xyz"}, // Example link
+      {"text": "Faster context switching", "related_log_id": "log-abc"}
+    ]
+  },
+  "recommendations": [
+    "Review LLM tier list for coding/debugging tasks.",
+    "Increase default Playwright timeout in configuration.",
+    "Analyze Doctor's Notes for recurring issues.",
+    "Investigate performance bottlenecks in context switching."
+  ],
+   "log_references": {
+     "failed_actions": ["log-id-fail1", "log-id-fail2", "log-id-fail3", "log-id-fail4"],
+     "multimodal_triggers": ["log-id-mm1"]
+   }
+}
+
+Alt example:
+{
+  "report_date": "2025-05-01",
+  "summary": {
+    "total_actions_initiated": 42,
+    "successful_actions": 38,
+    "failed_actions": 4,
+    "multimodal_triggers": 1,
+    "user_approvals_granted": 10,
+    "user_confirmations_granted": 1
+  },
+  "issues": [
+    {
+      "type": "PlaywrightTimeoutError",
+      "count": 1,
+      "reference": "doc-note-001",
+      "llm_output": {
+        "date": "2025-05-01",
+        "info_type": "analysis",
+        "text": {
+          "info": "Suggested fix for timeout error.",
+          "variables": {
+            "1": {"var_names": ["timeout"], "var_types": ["int"]}
+          },
+          "code": {
+            "1": "Increase timeout to 60000ms"
+          }
+        }
+      }
+    }
+  ],
+  "user_feedback": {
+    "thumbs_up": 25,
+    "thumbs_down": 3,
+    "suggestions": [
+      { "text": "Improve code comments", "related_log_id": "log-xyz" },
+      { "text": "Faster context switching", "related_log_id": "log-abc" }
+    ]
+  },
+  "recommendations": [
+    "Review LLM tier list for coding tasks.",
+    "Increase Playwright timeout.",
+    "Analyze Doctor’s Notes.",
+    "Optimize context switching."
+  ]
+}
+
+
+file tagging template
+file_path,tag,notes,last_reviewed
+/backend/config.json,critical,Main application configuration,2024-05-01
+/src/main.js,critical,Electron main process code,2024-05-01
+/backend/ai/jeff_base.json,critical,AI persona and core context,2024-05-01
+/logs/detailed.log,important,Detailed system logs,2024-05-01
+/project/my_script.py,important,User project script,2024-05-01
+/cache/temp.json,non-critical,Temporary data,2024-05-01
+
+
+json version
+[
+  {
+    "file_path": "/backend/config.json",
+    "tags": ["critical", "json", "configuration"],
+    "notes": "Main application configuration.",
+    "auto_tagged": true,
+    "last_reviewed": "2024-05-01T10:00:00Z"
+  },
+  {
+    "file_path": "/src/main.js",
+    "tags": ["critical", "javascript", "electron-main"],
+    "notes": "Electron main process code.",
+    "auto_tagged": true,
+    "last_reviewed": "2024-05-01T10:00:00Z"
+  },
+  {
+    "file_path": "/backend/ai/jeff_base.json",
+    "tags": ["critical", "json", "ai-persona"],
+    "notes": "AI persona and core context.",
+    "auto_tagged": false, // Assuming this might be manually tagged
+    "last_reviewed": "2024-05-01T10:00:00Z"
+  },
+  {
+    "file_path": "/logs/detailed.log",
+    "tags": ["important", "log"],
+    "notes": "Detailed system logs.",
+    "auto_tagged": true,
+    "last_reviewed": "2024-05-01T10:00:00Z"
+  },
+    {
+    "file_path": "/project/my_script.py",
+    "tags": ["important", "user-script", "python"],
+    "notes": "User project script.",
+    "auto_tagged": false, // User-created file, potentially manually tagged
+    "last_reviewed": "2024-05-01T10:00:00Z"
+  }
+  // ... more files
+]
+
+Alt example:
+[
+  {
+    "file_path": "/backend/config.json",
+    "tags": ["critical", "json", "configuration"],
+    "notes": "Main application configuration.",
+    "auto_tagged": true,
+    "last_reviewed": "2025-05-01T10:00:00Z",
+    "github_url": "https://github.com/user/repo/backend/config.json"
+  },
+  {
+    "file_path": "/project/my_script.py",
+    "tags": ["important", "user-script", "python"],
+    "notes": "User project script.",
+    "auto_tagged": false,
+    "last_reviewed": "2025-05-01T10:00:00Z",
+    "github_url": "https://github.com/user/repo/project/my_script.py"
+  }
+]
+
+7. Sample System Instruction and Response
+System Instruction
+text
+Copy
+all of your responses have to strictly follow the following format. a json dict that is structured like this {'date':[todays date],'info_type': [types are either 'code','question-answer','analysis','fact'],'text': (for code) {'info':[short description of code's purpose],'variables':{(number id starting from 1):{'var_names':[variable names],'var_types':[variable type]}},'code':{(index is correspondant to line number):'line of code with comment if there is one including mark up for appropriate python indenting'}}. right after the json dict print the pure code in markup with comments. you are very limited with words, all your replies are direct, without explanation and as short as possible.
+Sample Response
+json
+Copy
+{
+    "date": "2023-10-27",
+    "info_type": "code",
+    "text": {
+        "info": "Converts PDF text to DOCX, corrects spelling, saves. Requires 'pdfminer.six', 'python-docx', 'pyspellchecker' and helper functions `extract_text_from_pdf`, `correct_spelling_in_text`.",
+        "variables": {
+            "1": {
+                "var_names": ["pdf_path"],
+                "var_types": ["str"]
+            },
+            "2": {
+                "var_names": ["output_doc_path"],
+                "var_types": ["str"]
+            },
+            "3": {
+                "var_names": ["pdf_text"],
+                "var_types": ["str"]
+            },
+            "4": {
+                "var_names": ["corrected_text"],
+                "var_types": ["str"]
+            },
+            "5": {
+                "var_names": ["document"],
+                "var_types": ["docx.document.Document"]
+            }
+        },
+        "code": {
+            "1": "from docx import Document",
+            "2": "",
+            "3": "def pdf_to_docx_spellcheck_and_save(pdf_path, output_doc_path):",
+            "4": "    # Requires helper function extract_text_from_pdf(pdf_path) (e.g., using pdfminer.six)",
+            "5": "    # Requires helper function correct_spelling_in_text(text) (e.g., using pyspellchecker)",
+            "6": "    pdf_text = extract_text_from_pdf(pdf_path) # Extract text from PDF (text only, no formatting)",
+            "7": "    corrected_text = correct_spelling_in_text(pdf_text) # Correct spelling in the extracted text",
+            "8": "    document = Document() # Create a new DOCX document",
+            "9": "    document.add_paragraph(corrected_text) # Add the corrected text as a single paragraph",
+            "10": "    document.save(output_doc_path) # Save the document"
+        }
+    }
+}
+python
+Copy
+from docx import Document
+
+def pdf_to_docx_spellcheck_and_save(pdf_path, output_doc_path):
+    # Requires helper function extract_text_from_pdf(pdf_path) (e.g., using pdfminer.six)
+    # Requires helper function correct_spelling_in_text(text) (e.g., using pyspellchecker)
+    pdf_text = extract_text_from_pdf(pdf_path) # Extract text from PDF (text only, no formatting)
+    corrected_text = correct_spelling_in_text(pdf_text) # Correct spelling in the extracted text
+    document = Document() # Create a new DOCX document
+    document.add_paragraph(corrected_text) # Add the corrected text as a single paragraph
+    document.save(output_doc_path) # Save the document
