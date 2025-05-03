@@ -122,7 +122,8 @@ app.whenReady().then(() => {
 });
 
 // Move resize handler outside to prevent duplicates
-mainWindow?.on('resize', () => {
+if (mainWindow) {
+  mainWindow.on('resize', () => {
     if (activeTabId) {
       const activeTab = tabs.find(t => t.id === activeTabId);
       if (activeTab) {
@@ -135,17 +136,11 @@ mainWindow?.on('resize', () => {
       }
     }
   });
+}
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
-      createTab();
-    }
-  });
-
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createMainWindow();
+    createTab();
   }
 });
