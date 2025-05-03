@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain } = require('electron');
 const path = require('path');
 
 let mainWindow;
@@ -88,6 +88,34 @@ function closeTab(tabId) {
   mainWindow.webContents.send('tabs-data', tabs);
 }
 
+// IPC Handlers
+ipcMain.handle('create-tab', (event, url) => {
+  return createTab(url);
+});
+
+ipcMain.handle('switch-tab', (event, tabId) => {
+  setActiveTab(tabId);
+});
+
+ipcMain.handle('close-tab', (event, tabId) => {
+  closeTab(tabId);
+});
+
+ipcMain.handle('update-url', (event, tabId, url) => {
+  const tab = tabs.find(t => t.id === tabId);
+  if (tab) {
+    tab.url = url;
+    tab.view.webContents.loadURL(url);
+    mainWindow.webContents.send('tabs-data', tabs);
+  }
+});
+
+ipcMain.on('get-tabs', (event) => {
+  event.reply('tabs-data', tabs);
+});
+
+ipcMain.handle('get-active-tab-id', () => activeTabId);
+
 app.whenReady().then(() => {
   createMainWindow();
   createTab(); // Create initial tab
@@ -114,8 +142,8 @@ app.whenReady().then(() => {
   });
 });
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
     app.quit();
   }
 });

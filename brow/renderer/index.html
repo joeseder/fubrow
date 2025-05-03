@@ -9,7 +9,10 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-900 text-white">
-  <div id="tab-bar" class="flex bg-gray-800 p-2"></div>
+  <div id="tab-bar" class="flex bg-gray-800 p-2 items-center">
+    <button id="new-tab" class="material-icons text-white p-2 hover:bg-gray-700">add</button>
+    <input id="url-bar" type="text" class="ml-2 p-1 bg-gray-700 text-white rounded w-1/2" placeholder="Enter URL">
+  </div>
   <div id="content-area" class="mt-20"></div>
   <script src="renderer.js"></script>
 </body>
