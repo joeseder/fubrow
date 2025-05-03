@@ -110,8 +110,8 @@ ipcMain.handle('update-url', (event, tabId, url) => {
   }
 });
 
-ipcMain.on('get-tabs', (event) => {
-  event.reply('tabs-data', tabs);
+ipcMain.handle('get-tabs', () => {
+  return tabs;
 });
 
 ipcMain.handle('get-active-tab-id', () => activeTabId);
@@ -119,8 +119,10 @@ ipcMain.handle('get-active-tab-id', () => activeTabId);
 app.whenReady().then(() => {
   createMainWindow();
   createTab(); // Create initial tab
+});
 
-  mainWindow.on('resize', () => {
+// Move resize handler outside to prevent duplicates
+mainWindow?.on('resize', () => {
     if (activeTabId) {
       const activeTab = tabs.find(t => t.id === activeTabId);
       if (activeTab) {
@@ -140,7 +142,7 @@ app.whenReady().then(() => {
       createTab();
     }
   });
-});
+
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

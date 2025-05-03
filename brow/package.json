@@ -4,8 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "test": "electron test.js"
+    "start": "electron ."
   },
   "keywords": [],
   "author": "",

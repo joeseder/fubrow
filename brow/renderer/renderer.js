@@ -57,4 +57,10 @@ tabBar.addEventListener('click', (e) => {
 });
 
 window.electronAPI.getTabs().then(tabs => renderTabs(tabs));
-window.electronAPI.onTabsUpdate((event, tabs) => renderTabs(tabs));
+const tabsUpdateListener = (event, tabs) => renderTabs(tabs);
+window.electronAPI.onTabsUpdate(tabsUpdateListener);
+
+// Cleanup on window unload
+window.addEventListener('unload', () => {
+  window.electronAPI.onTabsUpdate.removeListener(tabsUpdateListener);
+});
