@@ -6,7 +6,7 @@ let tabs = [];
 let activeTabId = null;
 
 function createMainWindow() {
-  if (mainWindow) return mainWindow; // Prevent multiple windows
+  if (mainWindow) return mainWindow;
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -20,17 +20,35 @@ function createMainWindow() {
 
   mainWindow.loadFile('renderer/index.html');
 
+  // Single resize listener
+  mainWindow.on('resize', () => {
+    if (activeTabId && mainWindow) {
+      const activeTab = tabs.find(t => t.id === activeTabId);
+      if (activeTab) {
+        activeTab.view.setBounds({
+          x: 0,
+          y: 80,
+          width: mainWindow.getBounds().width,
+          height: mainWindow.getBounds().height - 80
+        });
+      }
+    }
+  });
+
   // Cleanup on close
   mainWindow.on('closed', () => {
-    mainWindow = null;
+    tabs.forEach(tab => mainWindow.removeBrowserView(tab.view));
     tabs = [];
     activeTabId = null;
+    mainWindow = null;
   });
 
   return mainWindow;
 }
 
 function createTab(url = 'https://www.google.com') {
+  if (!mainWindow) return null;
+
   const tabId = `tab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const view = new BrowserView({
     webPreferences: {
@@ -60,11 +78,13 @@ function createTab(url = 'https://www.google.com') {
 
 function setActiveTab(tabId) {
   const tab = tabs.find(t => t.id === tabId);
-  if (!tab) return;
+  if (!tab || !mainWindow) return;
 
   tabs.forEach(t => {
-    mainWindow.removeBrowserView(t.view);
-    t.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+    if (t.id !== tabId) {
+      mainWindow.removeBrowserView(t.view);
+      t.view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+    }
   });
 
   mainWindow.addBrowserView(tab.view);
@@ -82,7 +102,7 @@ function setActiveTab(tabId) {
 
 function closeTab(tabId) {
   const tabIndex = tabs.findIndex(t => t.id === tabId);
-  if (tabIndex === -1) return;
+  if (tabIndex === -1 || !mainWindow) return;
 
   const tab = tabs[tabIndex];
   mainWindow.removeBrowserView(tab.view);
@@ -112,7 +132,7 @@ ipcMain.handle('close-tab', (event, tabId) => {
 
 ipcMain.handle('update-url', (event, tabId, url) => {
   const tab = tabs.find(t => t.id === tabId);
-  if (tab) {
+  if (tab && mainWindow) {
     tab.url = url;
     tab.view.webContents.loadURL(url);
     mainWindow.webContents.send('tabs-data', tabs);
@@ -128,25 +148,6 @@ ipcMain.handle('get-active-tab-id', () => activeTabId);
 app.whenReady().then(() => {
   createMainWindow();
   createTab();
-});
-
-// Resize listener (single instance)
-app.on('ready', () => {
-  if (mainWindow) {
-    mainWindow.on('resize', () => {
-      if (activeTabId) {
-        const activeTab = tabs.find(t => t.id === activeTabId);
-        if (activeTab) {
-          activeTab.view.setBounds({
-            x: 0,
-            y: 80,
-            width: mainWindow.getBounds().width,
-            height: mainWindow.getBounds().height - 80
-          });
-        }
-      }
-    });
-  }
 });
 
 app.on('activate', () => {

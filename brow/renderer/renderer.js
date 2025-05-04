@@ -27,44 +27,61 @@ function renderTabs(tabs) {
   });
 }
 
-newTabBtn.addEventListener('click', () => {
+// Prevent duplicate listeners
+newTabBtn.removeEventListener('click', handleNewTab);
+function handleNewTab() {
+  console.log('Creating new tab');
   window.electronAPI.createTab('https://www.google.com');
-});
+}
+newTabBtn.addEventListener('click', handleNewTab);
 
-urlBar.addEventListener('keypress', (e) => {
+urlBar.removeEventListener('keypress', handleUrlBar);
+function handleUrlBar(e) {
   if (e.key === 'Enter') {
-    window.electronAPI.getTabs().then(tabs => {
+    const url = urlBar.value.trim();
+    console.log('Updating URL:', url);
+    if (url) {
       window.electronAPI.getActiveTabId().then(activeTabId => {
-        const active = tabs.find(t => t.id === activeTabId);
-        if (active) {
-          window.electronAPI.updateUrl(active.id, urlBar.value);
+        if (activeTabId) {
+          window.electronAPI.updateUrl(activeTabId, url);
         }
       });
-    });
+    }
   }
-});
+}
+urlBar.addEventListener('keypress', handleUrlBar);
 
-tabBar.addEventListener('click', (e) => {
+tabBar.removeEventListener('click', handleTabClick);
+function handleTabClick(e) {
   const tabEl = e.target.closest('.tab');
   if (!tabEl) return;
 
   const tabId = tabEl.dataset.tabId;
   if (e.target.classList.contains('close-tab')) {
+    console.log('Closing tab:', tabId);
     window.electronAPI.closeTab(tabId);
   } else {
+    console.log('Switching to tab:', tabId);
     window.electronAPI.switchTab(tabId);
   }
+}
+tabBar.addEventListener('click', handleTabClick);
+
+window.electronAPI.getTabs().then(tabs => {
+  console.log('Initial tabs:', tabs);
+  renderTabs(tabs);
 });
 
-window.electronAPI.getTabs().then(tabs => renderTabs(tabs));
 const tabsUpdateListener = (event, tabs) => {
-  console.log('Tabs update received:', tabs.length);
+  console.log('Tabs update:', tabs);
   renderTabs(tabs);
 };
 const removeTabsUpdateListener = window.electronAPI.onTabsUpdate(tabsUpdateListener);
 
-// Cleanup on window unload
 window.addEventListener('unload', () => {
   console.log('Cleaning up tabsUpdateListener');
   removeTabsUpdateListener();
+  newTabBtn.removeEventListener('click', handleNewTab);
+  urlBar.removeEventListener('keypress', handleUrlBar);
+  tabBar.removeEventListener('click', handleTabClick);
 });
