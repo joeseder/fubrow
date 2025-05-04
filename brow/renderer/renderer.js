@@ -57,9 +57,14 @@ tabBar.addEventListener('click', (e) => {
 });
 
 window.electronAPI.getTabs().then(tabs => renderTabs(tabs));
-const tabsUpdateListener = (event, tabs) => renderTabs(tabs);
+const tabsUpdateListener = (event, tabs) => {
+  console.log('Tabs update received:', tabs.length);
+  renderTabs(tabs);
+};
 const removeTabsUpdateListener = window.electronAPI.onTabsUpdate(tabsUpdateListener);
+
 // Cleanup on window unload
 window.addEventListener('unload', () => {
-  ipcRenderer.removeListener('tabs-data', tabsUpdateListener);
+  console.log('Cleaning up tabsUpdateListener');
+  removeTabsUpdateListener();
 });

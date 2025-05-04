@@ -1,11 +1,13 @@
 const { app, BrowserWindow, BrowserView, ipcMain } = require('electron');
 const path = require('path');
 
-let mainWindow;
+let mainWindow = null;
 let tabs = [];
 let activeTabId = null;
 
 function createMainWindow() {
+  if (mainWindow) return mainWindow; // Prevent multiple windows
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -17,6 +19,14 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile('renderer/index.html');
+
+  // Cleanup on close
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    tabs = [];
+    activeTabId = null;
+  });
+
   return mainWindow;
 }
 
@@ -76,7 +86,6 @@ function closeTab(tabId) {
 
   const tab = tabs[tabIndex];
   mainWindow.removeBrowserView(tab.view);
-  tab.view.destroy();
   tabs.splice(tabIndex, 1);
 
   if (activeTabId === tabId && tabs.length > 0) {
@@ -118,29 +127,37 @@ ipcMain.handle('get-active-tab-id', () => activeTabId);
 
 app.whenReady().then(() => {
   createMainWindow();
-  createTab(); // Create initial tab
+  createTab();
 });
 
-// Move resize handler outside to prevent duplicates
-if (mainWindow) {
-  mainWindow.on('resize', () => {
-    if (activeTabId) {
-      const activeTab = tabs.find(t => t.id === activeTabId);
-      if (activeTab) {
-        activeTab.view.setBounds({
-          x: 0,
-          y: 80,
-          width: mainWindow.getBounds().width,
-          height: mainWindow.getBounds().height - 80
-        });
+// Resize listener (single instance)
+app.on('ready', () => {
+  if (mainWindow) {
+    mainWindow.on('resize', () => {
+      if (activeTabId) {
+        const activeTab = tabs.find(t => t.id === activeTabId);
+        if (activeTab) {
+          activeTab.view.setBounds({
+            x: 0,
+            y: 80,
+            width: mainWindow.getBounds().width,
+            height: mainWindow.getBounds().height - 80
+          });
+        }
       }
-    }
-  });
-}
+    });
+  }
+});
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createMainWindow();
     createTab();
+  }
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
   }
 });
