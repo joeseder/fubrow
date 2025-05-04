@@ -22,6 +22,8 @@ function createMainWindow() {
 
   // Single resize listener
   mainWindow.on('resize', () => {
+    console.log('Resize listeners:', mainWindow.listenerCount('resize'));
+    console.log('Closed listeners:', mainWindow.listenerCount('closed'));
     if (activeTabId && mainWindow) {
       const activeTab = tabs.find(t => t.id === activeTabId);
       if (activeTab) {
@@ -101,6 +103,7 @@ function setActiveTab(tabId) {
 }
 
 function closeTab(tabId) {
+  console.log('Tabs before close:', tabs.map(t => t.id));
   const tabIndex = tabs.findIndex(t => t.id === tabId);
   if (tabIndex === -1 || !mainWindow) return;
 
@@ -115,6 +118,7 @@ function closeTab(tabId) {
   }
 
   mainWindow.webContents.send('tabs-data', tabs);
+  console.log('Tabs after close:', tabs.map(t => t.id));
 }
 
 // IPC Handlers
